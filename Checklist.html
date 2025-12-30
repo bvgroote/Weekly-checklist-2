@@ -1,0 +1,248 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Weekly Checklist</title>
+  <style>
+    :root { --border:#e6e6e6; --text:#111; --muted:#666; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: var(--text); }
+    .wrap { max-width: 820px; margin: 0 auto; }
+    h1 { font-size: 20px; margin: 0 0 14px; }
+    .topbar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom: 18px; }
+    .weekof { font-weight: 700; }
+    .pill { border:1px solid var(--border); border-radius:999px; padding:6px 10px; font-size: 13px; color: var(--muted); }
+    button {
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:10px;
+      padding:8px 12px;
+      font-size:14px;
+      cursor:pointer;
+    }
+    button:hover { background:#fafafa; }
+    .card { border:1px solid var(--border); border-radius:14px; padding: 14px; }
+    .row { display:flex; align-items:center; justify-content:space-between; gap: 12px; padding: 10px 0; border-bottom:1px solid var(--border); }
+    .row:last-child { border-bottom:none; }
+    .label { font-weight:700; letter-spacing:.2px; }
+    .sublabel { font-weight:600; color: var(--muted); }
+    .checks { display:flex; gap: 8px; flex-wrap:wrap; justify-content:flex-end; }
+    .checks input[type="checkbox"] { width: 22px; height: 22px; }
+    .sectionTitle { display:flex; align-items:center; justify-content:space-between; padding: 10px 0 6px; }
+    .sectionTitle .label { font-size:16px; }
+    .hint { margin-top: 12px; font-size: 13px; color: var(--muted); line-height: 1.4; }
+    .divider { height: 10px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Weekly Checklist</h1>
+
+
+  <div class="topbar">
+    <div class="weekof">WEEK OF: <span id="weekStartText"></span></div>
+    <div class="pill" id="storageKeyText"></div>
+    <button id="resetBtn" type="button">Reset this week</button>
+    <button id="exportBtn" type="button">Export</button>
+    <button id="importBtn" type="button">Import</button>
+  </div>
+
+
+  <div class="card" id="app"></div>
+
+
+  <div class="hint">
+    Saves on this device/browser using localStorage. If you open it on another device, it won’t sync unless you host it and still each device keeps its own local ticks.
+    Weekly reset is automatic when the week changes (Monday-start weeks).
+  </div>
+</div>
+
+
+<script>
+/** ----- Week logic (Monday start) ----- **/
+function getWeekStartISO(date = new Date()) {
+  // Normalize to local midnight
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const day = d.getDay(); // 0=Sun..6=Sat
+  const diffToMonday = (day === 0) ? -6 : (1 - day); // Sunday -> back 6 days; else back to Monday
+  d.setDate(d.getDate() + diffToMonday);
+  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+function formatISO(iso) {
+  // Display like "Mon 05 Jan 2026" in user's locale
+  const [y,m,d] = iso.split("-").map(Number);
+  const dt = new Date(y, m-1, d);
+  return dt.toLocaleDateString(undefined, { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
+}
+
+
+/** ----- Your checklist model ----- **/
+const MODEL = [
+  { id: "house", label: "HOUSE", counts: 1 },
+  {
+    id: "viet_section",
+    section: true,
+    label: "VIETNAMESE",
+    rows: [
+      { id: "viet_trang", label: "VIET (Trang)", counts: 7 },
+      { id: "viet_f4t", label: "F4T", counts: 4 },
+      { id: "viet_anki", label: "ANKI", counts: 5 },
+      { id: "viet_xem", label: "XEM", counts: 1 },
+    ]
+  },
+  { id: "yoga", label: "YOGA / STRETCH", counts: 7 },
+  { id: "cardio", label: "CARDIO", counts: 3 },
+  { id: "strength", label: "STRENGTH", counts: 3 },
+  { id: "minhquan", label: "MINH QUÂN", counts: 1 },
+];
+
+
+/** ----- Storage ----- **/
+function getStorageKey() {
+  const weekStart = getWeekStartISO();
+  return `weekly-checklist:${weekStart}`;
+}
+function loadState(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+function saveState(key, state) {
+  localStorage.setItem(key, JSON.stringify(state));
+}
+function buildEmptyState() {
+  const state = {};
+  for (const item of MODEL) {
+    if (item.section) {
+      for (const r of item.rows) state[r.id] = Array(r.counts).fill(false);
+    } else {
+      state[item.id] = Array(item.counts).fill(false);
+    }
+  }
+  return state;
+}
+
+
+/** ----- Render ----- **/
+const appEl = document.getElementById("app");
+const weekStartISO = getWeekStartISO();
+const storageKey = getStorageKey();
+document.getElementById("weekStartText").textContent = formatISO(weekStartISO);
+document.getElementById("storageKeyText").textContent = storageKey;
+
+
+let state = loadState(storageKey) ?? buildEmptyState();
+saveState(storageKey, state); // ensure it exists
+
+
+function render() {
+  appEl.innerHTML = "";
+
+
+  for (const item of MODEL) {
+    if (item.section) {
+      const title = document.createElement("div");
+      title.className = "sectionTitle";
+      title.innerHTML = `<div class="label">${item.label}</div><div class="sublabel">weekly targets</div>`;
+      appEl.appendChild(title);
+
+
+      for (const r of item.rows) {
+        appEl.appendChild(renderRow(r.id, r.label, r.counts));
+      }
+
+
+      const div = document.createElement("div");
+      div.className = "divider";
+      appEl.appendChild(div);
+    } else {
+      appEl.appendChild(renderRow(item.id, item.label, item.counts));
+    }
+  }
+}
+
+
+function renderRow(rowId, label, counts) {
+  const row = document.createElement("div");
+  row.className = "row";
+
+
+  const left = document.createElement("div");
+  left.className = "label";
+  left.textContent = label;
+
+
+  const right = document.createElement("div");
+  right.className = "checks";
+
+
+  const arr = state[rowId] ?? Array(counts).fill(false);
+
+
+  for (let i = 0; i < counts; i++) {
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!arr[i];
+    cb.addEventListener("change", () => {
+      state[rowId][i] = cb.checked;
+      saveState(storageKey, state);
+    });
+    right.appendChild(cb);
+  }
+
+
+  row.appendChild(left);
+  row.appendChild(right);
+  return row;
+}
+
+
+/** ----- Buttons ----- **/
+document.getElementById("resetBtn").addEventListener("click", () => {
+  state = buildEmptyState();
+  saveState(storageKey, state);
+  render();
+});
+
+
+document.getElementById("exportBtn").addEventListener("click", async () => {
+  const payload = { storageKey, weekStartISO, state };
+  const txt = JSON.stringify(payload, null, 2);
+  try {
+    await navigator.clipboard.writeText(txt);
+    alert("Copied export JSON to clipboard.");
+  } catch {
+    prompt("Copy this JSON:", txt);
+  }
+});
+
+
+document.getElementById("importBtn").addEventListener("click", () => {
+  const input = prompt("Paste export JSON here:");
+  if (!input) return;
+  try {
+    const payload = JSON.parse(input);
+    if (!payload.state) throw new Error("No state found");
+    state = payload.state;
+    saveState(storageKey, state);
+    render();
+    alert("Imported into this week.");
+  } catch (e) {
+    alert("Import failed: " + e.message);
+  }
+});
+
+
+render();
+
+
+/** ----- Auto-reset note -----
+ * This already auto-resets because the key changes each week.
+ * If you keep the page open across weeks, refresh once and it’ll switch keys.
+ */
+</script>
+</body>
+</html>
