@@ -27,7 +27,7 @@
     .label { font-weight:700; letter-spacing:.2px; }
     .sublabel { font-weight:600; color: var(--muted); }
     .checks { display:flex; gap: 8px; flex-wrap:wrap; justify-content:flex-end; }
-    .checks input[type="checkbox"] { width: 22px; height: 22px; }
+    .checks input[type="checkbox"] { width: 15px; height: 15px; }
     .sectionTitle { display:flex; align-items:center; justify-content:space-between; padding: 10px 0 6px; }
     .sectionTitle .label { font-size:16px; }
     .hint { margin-top: 12px; font-size: 13px; color: var(--muted); line-height: 1.4; }
@@ -78,14 +78,14 @@ function formatISO(iso) {
 
 /** ----- Your checklist model ----- **/
 const MODEL = [
-  { id: "house", label: "HOUSE", counts: 1 },
+  { id: "house", label: "HOUSE", counts: 3 },
   {
     id: "viet_section",
     section: true,
     label: "VIETNAMESE",
     rows: [
       { id: "viet_trang", label: "VIET (Trang)", counts: 7 },
-      { id: "viet_f4t", label: "F4T", counts: 4 },
+      { id: "viet_f4t", label: "F4T", counts: 2 },
       { id: "viet_anki", label: "ANKI", counts: 5 },
       { id: "viet_xem", label: "XEM", counts: 1 },
     ]
@@ -94,6 +94,8 @@ const MODEL = [
   { id: "cardio", label: "CARDIO", counts: 3 },
   { id: "strength", label: "STRENGTH", counts: 3 },
   { id: "minhquan", label: "MINH QUÂN", counts: 1 },
+  { id: "trangotis", label: "TRANG AND OTIS", counts: 2 },
+  { id: "notdrinking", label: "NO DRINKS DAYS", counts: 3 },
 ];
 
 
@@ -245,4 +247,5 @@ render();
  */
 </script>
 </body>
+
 </html>
