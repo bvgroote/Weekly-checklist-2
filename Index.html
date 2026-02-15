@@ -78,22 +78,22 @@ function formatISO(iso) {
 
 /** ----- Your checklist model ----- **/
 const MODEL = [
-  { id: "house", label: "HOUSE", counts: 3 },
-  {
+   {
     id: "viet_section",
     section: true,
     label: "VIETNAMESE",
     rows: [
-      { id: "viet_trang", label: "VIET (Trang)", counts: 7 },
+      { id: "viet_trang", label: "VIET (NC với Người việt)", counts: 7 },
       { id: "viet_f4t", label: "F4T", counts: 2 },
       { id: "viet_anki", label: "ANKI", counts: 5 },
-      { id: "viet_xem", label: "XEM", counts: 1 },
+      { id: "viet_xem", label: "XEM HAY NGHE", counts: 5 },
+      { id: "minhquan", label: "MINH QUÂN", counts: 1 },
     ]
   },
-  { id: "yoga", label: "YOGA / STRETCH", counts: 7 },
-  { id: "cardio", label: "CARDIO", counts: 3 },
+  { id: "yoga", label: "YOGA / STRETCH", counts: 4 },
+  { id: "cardio", label: "CARDIO", counts: 1 },
   { id: "strength", label: "STRENGTH", counts: 3 },
-  { id: "minhquan", label: "MINH QUÂN", counts: 1 },
+ 
   { id: "trangotis", label: "TRANG AND OTIS", counts: 2 },
   { id: "notdrinking", label: "NO DRINKS DAYS", counts: 3 },
 ];
@@ -249,3 +249,4 @@ render();
 </body>
 
 </html>
+
