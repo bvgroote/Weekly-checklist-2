@@ -189,8 +189,10 @@ function renderRow(rowId, label, counts) {
     cb.type = "checkbox";
     cb.checked = !!arr[i];
     cb.addEventListener("change", () => {
-      state[rowId][i] = cb.checked;
-      saveState(storageKey, state);
+  state[rowId][i] = cb.checked;
+  saveState(storageKey, state);
+  // force immediate write visibility (Chrome mobile)
+  localStorage.setItem(storageKey, JSON.stringify(state));
     });
     right.appendChild(cb);
   }
@@ -240,7 +242,22 @@ document.getElementById("importBtn").addEventListener("click", () => {
 
 render();
 
+// Re-sync state when tab becomes visible again (Chrome mobile fix)
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    const fresh = loadState(storageKey);
+    if (fresh) {
+      state = fresh;
+      render();
+    }
+  }
+});
 
+// Save state when Chrome backgrounds / discards the tab
+window.addEventListener("pagehide", () => {
+  saveState(storageKey, state);
+});
+  
 /** ----- Auto-reset note -----
  * This already auto-resets because the key changes each week.
  * If you keep the page open across weeks, refresh once and it’ll switch keys.
@@ -249,4 +266,5 @@ render();
 </body>
 
 </html>
+
 
